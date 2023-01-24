@@ -81,4 +81,11 @@ export class AuthController{
     async facebookLoginRedirect(@Req() req: Request): Promise<any> {
         return this.authService.facebookAuth(req);
     }
+
+    //firebase
+    @Get("firebase")
+    async getFirebase(@Req() req: Request): Promise<any> {
+        return this.authService.firebaseAuth(req);
+        // return 'Hello ' + JSON.stringify(request['user']) + '!';
+    }
 }

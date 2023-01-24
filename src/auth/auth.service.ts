@@ -25,6 +25,7 @@ export class AuthService {
             const user = await this.prisma.user.create({
                 data: {
                     email: dto.email,
+                    phone: 'null',
                     password: hash,
                     username: dto.username,
                     is_active: true,
@@ -213,7 +214,7 @@ export class AuthService {
                 }
             })
 
-            console.log(totalRequest);
+            // console.log(totalRequest);
 
             if (totalRequest >= 3) {
                 throw new ForbiddenException (
@@ -328,6 +329,7 @@ export class AuthService {
                 const user = await this.prisma.user.create({
                     data: {
                         email: req.user.emails[0].value,
+                        phone: 'null',
                         is_verified: req.user.emails[0].verified,
                         username: req.user.name.familyName + "_" + req.user.name.givenName,
                         is_active: true,
@@ -382,6 +384,7 @@ export class AuthService {
                 const user = await this.prisma.user.create({
                     data: {
                         email: req.user.user.email,
+                        phone: 'null',
                         is_verified: true,
                         username: req.user.user.lastName + "_" + req.user.user.firstName,
                         is_active: true,
@@ -417,6 +420,62 @@ export class AuthService {
             } else {
                 throw new ForbiddenException (
                     'User is not registered via Facebook auth provider. Please try another way.'
+                );
+            }
+        }
+    }
+
+    async firebaseAuth (req: any) {
+        //if request['user] == null return 403
+        //if request['user'] != null save to database and send access_token
+        //create a service
+        //first check if user already registered
+        const user = await this.prisma.user.findUnique({
+            where: {
+                phone: req['user'].phone,
+            }
+        })
+        //if user doesn't exist register user and give access
+        if (!user) {
+            try {
+                //save the user
+                const user = await this.prisma.user.create({
+                    data: {
+                        email: 'null',
+                        phone: req['user'].phone,
+                        is_verified: true,
+                        username: req['user'].phone,
+                        is_active: true,
+                        provider: 'phone',
+                        password: 'null'
+                    },
+                });
+        
+                //return the user
+                const tokens = await this.getTokens(user.id, user.username, user.email);
+                await this.updateRefreshToken(user.id, tokens.refreshToken);
+                return tokens;
+    
+                // return this.signToken(user.id, user.email, user.is_verified);
+            } catch(error) {
+                if (error instanceof PrismaClientKnownRequestError) {
+                    if (error.code === 'P2002') {
+                        throw new ForbiddenException (
+                            'Credentials Taken'
+                        )
+                    }
+                }
+                throw error;
+            }
+        } else {
+            //just login the user
+
+            //check if users provider is google first
+            if (user.provider == "phone" || user.provider == "all") {
+                return this.signToken(user.id, user.email, user.is_verified);
+            } else {
+                throw new ForbiddenException (
+                    'User is not registered via Phone auth provider. Please try another way.'
                 );
             }
         }
@@ -459,9 +518,6 @@ export class AuthService {
                 refresh_token: hashedRefreshToken
             }
         });
-        // await this.usersService.update(userId, {
-        //     refreshToken: hashedRefreshToken,
-        // });
     }
     
     async getTokens(userId: string, username: string, userEmail: string) {

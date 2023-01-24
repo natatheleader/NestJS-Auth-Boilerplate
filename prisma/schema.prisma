@@ -17,6 +17,7 @@ model User {
 
     username        String      @unique @db.VarChar(255)
     email           String      @unique @db.VarChar(255)
+    phone           String      @unique @db.VarChar(255)
     password        String      @db.VarChar(255)
     provider        String      @default("local") @db.VarChar(255)
     is_verified     Boolean     @default(false)
