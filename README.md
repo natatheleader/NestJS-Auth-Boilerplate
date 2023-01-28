@@ -2,6 +2,7 @@
 <div align="center">
     <p align="center">
         <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
+        <img src="https://i.ibb.co/Z1fGw5c/Brand.png" width="200" alt="Redemption Logo" />
     </p>
     <h1>NestJS Full Authentication Boilerplate</h1>
     <br />
